@@ -38,7 +38,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class Campaign(models.Model):
-    host = campaign = models.ForeignKey(User, on_delete=models.CASCADE)
+    host = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=50, unique=True)
     link = models.URLField(max_length=70)
     clicks = models.IntegerField(default=0)
@@ -65,7 +65,7 @@ class Candidate(models.Model):
         return f'{self.name} - {self.referral_code}'
 
     class Meta:
-        ordering = ['-pub_date']
+        ordering = ['clicks']
 
 
 class CampaignClick(models.Model):
