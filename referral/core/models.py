@@ -36,16 +36,19 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
 
+
 class Campaign(models.Model):
+    host = campaign = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=50, unique=True)
     link = models.URLField(max_length=70)
+    clicks = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     closing_date = models.DateField()
-    clicks = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
 
 
 class Candidate(models.Model):
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE)
     name = models.CharField(max_length=50, unique=True)
     referral_code = models.CharField(max_length=10)
     clicks = models.IntegerField(default=0)
@@ -55,5 +58,22 @@ class Candidate(models.Model):
         exist = Candidate.objects.filter(referral_code=code).exists()
         while exist:
             code = secrets.token_urlsafe(6)
-            return super().save(*args, **kwargs)
+        self.referral_code = code
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.name} - {self.referral_code}'
+
+    class Meta:
+        ordering = ['-pub_date']
+
+
+class CampaignClick(models.Model):
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE)
+    mac_ad = models.CharField(max_length=14)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
+    def __str__(self):
+        return f'{self.campaign.name} - {self.mac_ad}'
+
 
