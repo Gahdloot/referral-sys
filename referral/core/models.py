@@ -36,5 +36,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
 
+class Campaign(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    link = models.URLField(max_length=70)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    closing_date = models.DateField()
+    clicks = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+
 
 
