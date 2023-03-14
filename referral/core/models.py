@@ -45,5 +45,15 @@ class Campaign(models.Model):
     is_active = models.BooleanField(default=True)
 
 
+class Candidate(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    referral_code = models.CharField(max_length=10)
+    clicks = models.IntegerField(default=0)
 
+    def save(self, *args, **kwargs):
+        code = secrets.token_urlsafe(6)
+        exist = Candidate.objects.filter(referral_code=code).exists()
+        while exist:
+            code = secrets.token_urlsafe(6)
+            return super().save(*args, **kwargs)
 
