@@ -14,6 +14,19 @@ class UserManager(BaseUserManager):
         user.save()
         return user
 
+    def create_superuser(self, email, password, **other_fields):
+        user = self.create_user(
+            email = self.normalize_email(email),
+            password=password,
+            **other_fields
+        )
+        user.is_admin = True
+        user.is_active = True
+        user.is_staff = True
+        user.is_superuser = True
+        user.save(using=self._db)
+        return user
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=255, default='')
