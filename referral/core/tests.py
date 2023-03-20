@@ -23,7 +23,10 @@ class LoginTestCase(APITestCase):
     
     def setUp(self):
         self.login_url = reverse('login')
-        self.user = User.objects.create_superuser(email='testuser@gmail.com', password='password12345678')
+        # self.user = User.objects.create_superuser(email='testuser@gmail.com', password='password12345678')
+        self.user = User(email='testuser@gmail.com', is_active=True)
+        self.user.set_password('password12345678')
+        self.user.save()
         
     def test_login(self):
         data = {
@@ -47,7 +50,10 @@ class LogoutTestCase(APITestCase):
     
     def setUp(self) -> None:
         self.login_url = reverse('api_logout')
-        self.user = User.objects.create_superuser(email='testuser@gmail.com', password='password12345678')
+        # self.user = User.objects.create_superuser(email='testuser@gmail.com', password='password12345678')
+        self.user = User(email='testuser@gmail.com', is_active=True)
+        self.user.set_password('password12345678')
+        self.user.save()
 
     def test_logout(self):
         data = {
