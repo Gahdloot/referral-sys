@@ -1,6 +1,7 @@
 import os
 from django.test import TestCase
 from django.contrib.auth.password_validation import validate_password
+from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase, APIClient
 from django.urls import reverse
 from rest_framework import status
@@ -18,6 +19,28 @@ class SecretKeyTestCase(TestCase):
         except Exception as e:
             msg = f'Weak Secret Key {e.messages}'
             self.fail(msg)
+
+
+class TokenCreationTestCase(APITestCase):
+    
+    def setUp(self):
+        self.login_url = reverse('login')
+        self.user = User(email='testuser@gmail.com', is_active=True)
+        self.user.set_password('password12345678')
+        self.user.save()
+        
+    def test_token_created_on_login(self):
+        data = {
+            "email":"testuser@gmail.com",
+            "password":"password12345678"
+        }
+        response = self.client.post(self.login_url, data, format='json')
+        # check that the response contains a token
+        self.assertIn('token', response.data)
+        # check that a token was created for the user
+        token = Token.objects.get(user=self.user)
+        self.assertIsNotNone(token)
+
 
 class LoginTestCase(APITestCase):
     
