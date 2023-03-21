@@ -7,20 +7,14 @@ from rest_framework import parsers, renderers
 from .authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.generics import GenericAPIView
+from rest_framework.authtoken.views import ObtainAuthToken
 
 from .serializers import AuthCustomTokenSerializer
 
 
 # Create your views here.
-class ObtainAuthToken(APIView):
-    throttle_classes = ()
-    permission_classes = ()
-    parser_classes = (
-        parsers.FormParser,
-        parsers.MultiPartParser,
-        parsers.JSONParser,
-    )
-    renderer_classes = (renderers.JSONRenderer,)
+class CustomAuthToken(ObtainAuthToken):
+    serializer_class = AuthCustomTokenSerializer
 
     def post(self, request):
         serializer = AuthCustomTokenSerializer(data=request.data)
