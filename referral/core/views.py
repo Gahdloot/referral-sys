@@ -13,7 +13,7 @@ from .serializers import AuthCustomTokenSerializer
 
 
 # Create your views here.
-class CustomAuthToken(ObtainAuthToken):
+class LogInAPIView(ObtainAuthToken):
     serializer_class = AuthCustomTokenSerializer
 
     def post(self, request):

@@ -4,6 +4,6 @@ from . import views
 
 
 urlpatterns = [
-    path('api-token-auth/', views.CustomAuthToken.as_view(), name='login'),
+    path('api-token-auth/', views.LogInAPIView.as_view(), name='login'),
     path('api-logout/', views.LogoutAPIView.as_view(), name='api_logout'),
 ]
