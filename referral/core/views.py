@@ -9,7 +9,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.generics import GenericAPIView
 from rest_framework.authtoken.views import ObtainAuthToken
 
-from .serializers import AuthCustomTokenSerializer
+from .serializers import AuthCustomTokenSerializer, UserSerializer
 
 
 # Create your views here.
@@ -44,4 +44,17 @@ class LogoutAPIView(APIView):
         # perform any additional logic you need here
         request.user.auth_token.delete() # This deletes the authentication token associated with the user
         return Response(status=status.HTTP_200_OK)
+
+
+class RegisterAPIView(APIView):
+    # serializer_class = RegisterUserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def post(self, request, format=None, *args, **kwargs):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
