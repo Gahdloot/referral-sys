@@ -58,6 +58,8 @@ class Campaign(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     closing_date = models.DateField()
     is_active = models.BooleanField(default=True)
+    #adding campaign description
+    description = models.TextField()
 
 
 class Candidate(models.Model):
