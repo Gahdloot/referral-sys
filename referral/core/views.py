@@ -61,11 +61,9 @@ class RegisterAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class ProfilePage(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
-
 
     def get(self, request):
         data = {}
@@ -84,3 +82,5 @@ class ProfilePage(APIView):
             except ObjectDoesNotExist:
                 # Handle the case where no queryset is found
                 data['campaign_counts'] = 0
+
+        return Response(data)
