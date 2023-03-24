@@ -1,7 +1,7 @@
 import re
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import User
+from .models import User, Campaign, Candidate, CampaignClick
 from . import validators
 
 
@@ -82,3 +82,9 @@ class UserSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(f'{value} is not a valid phone number')
             # print(result.group())
         return value
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'email', 'phone_number', 'company_name']
