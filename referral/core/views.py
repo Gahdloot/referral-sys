@@ -48,9 +48,6 @@ class LogoutAPIView(APIView):
 
 class RegisterAPIView(APIView):
     # serializer_class = RegisterUserSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    authentication_classes = [TokenAuthentication]
-
     def post(self, request, format=None, *args, **kwargs):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
