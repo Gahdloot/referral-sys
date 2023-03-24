@@ -106,12 +106,12 @@ class RegisterTestCase(APITestCase):
         self.user.save()
 
     def test_register(self):
-        login_data = {
-            'email':'testuser@gmail.com',
-            'password': 'password12345678'
-        }
-        response_login = self.client.post(self.login_url, login_data, format='json')
-        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + response_login.json().get('token'))
+        # login_data = {
+        #     'email':'testuser@gmail.com',
+        #     'password': 'password12345678'
+        # }
+        # response_login = self.client.post(self.login_url, login_data, format='json')
+        # self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + response_login.json().get('token'))
         
         #Test register view
         register_data = {
