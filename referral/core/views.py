@@ -11,7 +11,7 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from .models import User, Campaign, CampaignClick, Candidate
 from django.core.exceptions import ObjectDoesNotExist
 
-from .serializers import AuthCustomTokenSerializer, UserSerializer, UserProfileSerializer
+from .serializers import AuthCustomTokenSerializer, UserSerializer, UserProfileSerializer, CampaignListSerializer
 
 
 # Create your views here.
@@ -84,3 +84,25 @@ class ProfilePage(APIView):
                 data['campaign_counts'] = 0
 
         return Response(data)
+
+
+class Campaign_page_list(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def get(self, request):
+        data = {}
+        user = request.user
+        token_user = request.auth.user
+        try:
+            campaign_counts_queryset = Campaign.objects.filter(host__id=user.id).count()
+            data['campaign_counts'] = campaign_counts_queryset
+            campaign_list = Campaign.objects.filter(host__id=user.id)
+            campaign_list = CampaignListSerializer(campaign_list, many=True)
+            data['campaign_list'] = campaign_list.data
+
+
+        except ObjectDoesNotExist:
+            # Handle the case where no queryset is found
+            data['campaign_counts'] = 0
+            data['message'] = 'No campaign available'
