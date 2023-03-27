@@ -11,7 +11,7 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from .models import User, Campaign, CampaignClick, Candidate
 from django.core.exceptions import ObjectDoesNotExist
 
-from .serializers import AuthCustomTokenSerializer, UserSerializer, UserProfileSerializer, CampaignListSerializer
+from .serializers import AuthCustomTokenSerializer, UserSerializer, UserProfileSerializer, CampaignListSerializer, CampaignCreationSerializer
 
 
 # Create your views here.
@@ -69,19 +69,18 @@ class ProfilePage(APIView):
         data = {}
         user = request.user
         token_user = request.auth.user
-        if user == token_user:
-            # Token belongs to the current user
-            user_queryset = User.objects.get(pk=user.id)
-            user_serializer = UserProfileSerializer(user_queryset)
-            data['user profile'] = user_serializer.data
+        # Token belongs to the current user
+        user_queryset = User.objects.get(pk=user.id)
+        user_serializer = UserProfileSerializer(user_queryset)
+        data['user profile'] = user_serializer.data
 
-            try:
-                campaign_counts_queryset = Campaign.objects.filter(host__id=user.id).count()
-                data['campaign_counts'] = campaign_counts_queryset
+        try:
+            campaign_counts_queryset = Campaign.objects.filter(host__id=user.id).count()
+            data['campaign_counts'] = campaign_counts_queryset
 
-            except ObjectDoesNotExist:
-                # Handle the case where no queryset is found
-                data['campaign_counts'] = 0
+        except ObjectDoesNotExist:
+            # Handle the case where no queryset is found
+            data['campaign_counts'] = 0
 
         return Response(data)
 
@@ -106,3 +105,23 @@ class Campaign_page_list(APIView):
             # Handle the case where no queryset is found
             data['campaign_counts'] = 0
             data['message'] = 'No campaign available'
+
+
+class CreateCampaign(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+    def post(self, request):
+        data = {}
+        user = request.user
+        try:
+            user = User.objects.get(id=user.id)
+        except ObjectDoesNotExist:
+            data['message'] = 'Cannot get user for this task, please reloging'
+            return Response(data)
+        serializer = CampaignCreationSerializer(instance=Campaign, data= request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({'success': True, 'message': 'Creation complete'})
+
+
+
