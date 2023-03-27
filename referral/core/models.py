@@ -55,6 +55,7 @@ class Campaign(models.Model):
     name = models.CharField(max_length=50, unique=True)
     link = models.URLField(max_length=70)
     clicks = models.IntegerField(default=0)
+    contestant_number = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     closing_date = models.DateField()
     is_active = models.BooleanField(default=True)
@@ -74,6 +75,10 @@ class Candidate(models.Model):
         while exist:
             code = secrets.token_urlsafe(6)
         self.referral_code = code
+        campaign = Campaign.objects.get(id=self.campaign__id)
+        campaign.contestant_number += 1
+        campaign.save()
+
         return super().save(*args, **kwargs)
 
     def __str__(self):
