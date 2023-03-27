@@ -94,3 +94,9 @@ class CampaignListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Campaign
         fields = ['id', 'name', 'clicks', 'is_active']
+
+class CampaignCreationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Campaign
+        fields = ['host', 'name', 'link', 'closing_date']
