@@ -66,7 +66,7 @@ class Campaign(models.Model):
 class Candidate(models.Model):
     campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
-    referral_code = models.CharField(max_length=10)
+    referral_code = models.CharField(max_length=10, null=True, blank=True)
     clicks = models.IntegerField(default=0)
 
     def save(self, *args, **kwargs):
