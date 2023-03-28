@@ -10,8 +10,10 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.authtoken.views import ObtainAuthToken
 from .models import User, Campaign, CampaignClick, Candidate
 from django.core.exceptions import ObjectDoesNotExist
+from django.shortcuts import redirect
 
-from .serializers import AuthCustomTokenSerializer, UserSerializer, UserProfileSerializer
+from .serializers import AuthCustomTokenSerializer, UserSerializer, UserProfileSerializer, \
+    CampaignListSerializer, CampaignCreationSerializer, CampaignPageSerializer, CandidateSerializer
 
 
 # Create your views here.
@@ -69,18 +71,109 @@ class ProfilePage(APIView):
         data = {}
         user = request.user
         token_user = request.auth.user
-        if user == token_user:
-            # Token belongs to the current user
-            user_queryset = User.objects.get(pk=user.id)
-            user_serializer = UserProfileSerializer(user_queryset)
-            data['user profile'] = user_serializer.data
+        # Token belongs to the current user
+        user_queryset = User.objects.get(pk=user.id)
+        user_serializer = UserProfileSerializer(user_queryset)
+        data['user profile'] = user_serializer.data
 
-            try:
-                campaign_counts_queryset = Campaign.objects.filter(host__id=user.id).count()
-                data['campaign_counts'] = campaign_counts_queryset
+        try:
+            campaign_counts_queryset = Campaign.objects.filter(host__id=user.id).count()
+            data['campaign_counts'] = campaign_counts_queryset
 
-            except ObjectDoesNotExist:
-                # Handle the case where no queryset is found
-                data['campaign_counts'] = 0
+        except ObjectDoesNotExist:
+            # Handle the case where no queryset is found
+            data['campaign_counts'] = 0
 
         return Response(data)
+
+
+class Campaign_page_list(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def get(self, request):
+        data = {}
+        user = request.user
+        token_user = request.auth.user
+        try:
+            campaign_counts_queryset = Campaign.objects.filter(host__id=user.id).count()
+            data['campaign_counts'] = campaign_counts_queryset
+            campaign_list = Campaign.objects.filter(host__id=user.id)
+            campaign_list = CampaignListSerializer(campaign_list, many=True)
+            data['campaign_list'] = campaign_list.data
+
+
+        except ObjectDoesNotExist:
+            # Handle the case where no queryset is found
+            data['campaign_counts'] = 0
+            data['message'] = 'No campaign available'
+
+
+class CreateCampaign(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+    def post(self, request):
+        data = {}
+        user = request.user
+        try:
+            user = User.objects.get(id=user.id)
+        except ObjectDoesNotExist:
+            data['message'] = 'Cannot get user for this task, please reloging'
+            return Response(data)
+        serializer = CampaignCreationSerializer(instance=Campaign, data= request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({'success': True, 'message': 'Creation complete'})
+
+
+class ViewCampaign(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+    def get(self, request, name):
+        data = {}
+        user = request.user
+        token_user = request.auth.user
+        try:
+            campaign = Campaign.objects.get(host__id=user.id)
+            serializer = CampaignPageSerializer(data=campaign)
+            campaign_profile = serializer.data
+            data['campaign'] = campaign_profile
+
+            if campaign.contestant_number < 1:
+                data['candidate'] = 0
+                return Response(data)
+            candidates = Candidate.object.filter(campaign__id=campaign.id)
+            candidates = CandidateSerializer(candidates, many=True)
+            data['candidate'] = candidates.data
+        except ObjectDoesNotExist:
+            data['message'] = 'Cannot get user for this task, please reloging'
+            return Response(data)
+
+
+    def post(self, request, name):
+
+        pass
+
+class RedirectLink(APIView):
+
+    def get(self, request, campaign_title, code):
+        data = {}
+        response = Response(data)
+        try:
+            campaign = Campaign.objects.get(name=campaign_title)
+            candidate = Candidate.objects.get(referral_code=code)
+            candidate_exist = candidate.exist()
+            candidate_cookie = request.COOKIES.get(f'{campaign_title}')
+            if candidate_exist and candidate_cookie is None:
+                candidate.clicks += 1
+                campaign.clicks += 1
+                response.set_cookie(f'{campaign_title}', f'{code}')
+                return redirect(f'{campaign.link}', response)
+
+        except ObjectDoesNotExist:
+            data['message'] = 'Cannot get user for this task, please reloging'
+            return Response(data)
+
+
+
+

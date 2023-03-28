@@ -88,3 +88,27 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'first_name', 'last_name', 'email', 'phone_number', 'company_name']
+
+
+class CampaignListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Campaign
+        fields = ['id', 'name', 'clicks', 'is_active']
+
+class CampaignCreationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Campaign
+        fields = ['host', 'name', 'link', 'closing_date']
+
+class CampaignPageSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Campaign
+        fields = ['host', 'name', 'link', 'created_at', 'closing_date', 'is_active', 'description', 'contestant_number']
+
+class CandidateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Candidate
+        fields = ['name', 'clicks', 'referral_code']
