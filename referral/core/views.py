@@ -11,7 +11,8 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from .models import User, Campaign, CampaignClick, Candidate
 from django.core.exceptions import ObjectDoesNotExist
 
-from .serializers import AuthCustomTokenSerializer, UserSerializer, UserProfileSerializer, CampaignListSerializer, CampaignCreationSerializer
+from .serializers import AuthCustomTokenSerializer, UserSerializer, UserProfileSerializer, \
+    CampaignListSerializer, CampaignCreationSerializer, CampaignPageSerializer, CandidateSerializer
 
 
 # Create your views here.
@@ -122,6 +123,37 @@ class CreateCampaign(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response({'success': True, 'message': 'Creation complete'})
+
+
+class ViewCampaign(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+    def get(self, request, name):
+        data = {}
+        user = request.user
+        token_user = request.auth.user
+        try:
+            campaign = Campaign.objects.get(host__id=user.id)
+            serializer = CampaignPageSerializer(data=campaign)
+            campaign_profile = serializer.data
+            data['campaign'] = campaign_profile
+
+            if campaign.contestant_number < 1:
+                data['candidate'] = 0
+                return Response(data)
+            candidates = Candidate.object.filter(campaign__id=campaign.id)
+            candidates = CandidateSerializer(candidates, many=True)
+            data['candidate'] = candidates.data
+        except ObjectDoesNotExist:
+            data['message'] = 'Cannot get user for this task, please reloging'
+            return Response(data)
+
+
+    def post(self, request, name):
+
+        pass
+
+
 
 
 
