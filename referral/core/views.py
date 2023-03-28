@@ -10,6 +10,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.authtoken.views import ObtainAuthToken
 from .models import User, Campaign, CampaignClick, Candidate
 from django.core.exceptions import ObjectDoesNotExist
+from django.shortcuts import redirect
 
 from .serializers import AuthCustomTokenSerializer, UserSerializer, UserProfileSerializer, \
     CampaignListSerializer, CampaignCreationSerializer, CampaignPageSerializer, CandidateSerializer
@@ -153,6 +154,25 @@ class ViewCampaign(APIView):
 
         pass
 
+class RedirectLink(APIView):
+
+    def get(self, request, campaign_title, code):
+        data = {}
+        response = Response(data)
+        try:
+            campaign = Campaign.objects.get(name=campaign_title)
+            candidate = Candidate.objects.get(referral_code=code)
+            candidate_exist = candidate.exist()
+            candidate_cookie = request.COOKIES.get(f'{campaign_title}')
+            if candidate_exist and candidate_cookie is None:
+                candidate.clicks += 1
+                campaign.clicks += 1
+                response.set_cookie(f'{campaign_title}', f'{code}')
+                return redirect(f'{campaign.link}', response)
+
+        except ObjectDoesNotExist:
+            data['message'] = 'Cannot get user for this task, please reloging'
+            return Response(data)
 
 
 
