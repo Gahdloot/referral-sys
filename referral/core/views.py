@@ -1,26 +1,22 @@
 from django.shortcuts import render
 from rest_framework import status
-from rest_framework import permissions
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import parsers, renderers
 from .authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.generics import GenericAPIView
+from rest_framework.authtoken.views import ObtainAuthToken
+from .models import User, Campaign, CampaignClick, Candidate
+from django.core.exceptions import ObjectDoesNotExist
 
-from .serializers import AuthCustomTokenSerializer
+from .serializers import AuthCustomTokenSerializer, UserSerializer, UserProfileSerializer
 
 
 # Create your views here.
-class ObtainAuthToken(APIView):
-    throttle_classes = ()
-    permission_classes = ()
-    parser_classes = (
-        parsers.FormParser,
-        parsers.MultiPartParser,
-        parsers.JSONParser,
-    )
-    renderer_classes = (renderers.JSONRenderer,)
+class LogInAPIView(ObtainAuthToken):
+    serializer_class = AuthCustomTokenSerializer
 
     def post(self, request):
         serializer = AuthCustomTokenSerializer(data=request.data)
@@ -40,7 +36,7 @@ class ObtainAuthToken(APIView):
 
 class LogoutAPIView(APIView):
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
 
     def post(self, request, *args, **kwargs):
@@ -51,3 +47,40 @@ class LogoutAPIView(APIView):
         request.user.auth_token.delete() # This deletes the authentication token associated with the user
         return Response(status=status.HTTP_200_OK)
 
+
+class RegisterAPIView(APIView):
+    # serializer_class = RegisterUserSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def post(self, request, format=None, *args, **kwargs):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProfilePage(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def get(self, request):
+        data = {}
+        user = request.user
+        token_user = request.auth.user
+        if user == token_user:
+            # Token belongs to the current user
+            user_queryset = User.objects.get(pk=user.id)
+            user_serializer = UserProfileSerializer(user_queryset)
+            data['user profile'] = user_serializer.data
+
+            try:
+                campaign_counts_queryset = Campaign.objects.filter(host__id=user.id).count()
+                data['campaign_counts'] = campaign_counts_queryset
+
+            except ObjectDoesNotExist:
+                # Handle the case where no queryset is found
+                data['campaign_counts'] = 0
+
+        return Response(data)
