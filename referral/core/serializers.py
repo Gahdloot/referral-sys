@@ -1,6 +1,9 @@
+import re
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import User
+from .models import User, Campaign, Candidate, CampaignClick
+from . import validators
+
 
 class AuthCustomTokenSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -28,21 +31,60 @@ class AuthCustomTokenSerializer(serializers.Serializer):
         attrs['user'] = user
         return attrs
 
-
-# class AuthTokenSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = User
-#         fields = ('email', 'password')
-#         extra_kwargs = {'password': {'write_only': True}}
     
-#     def validate(self, data):
-#         user_obj = None
-#         email = data.get('email')
-#         password = data.get('password')
-#         if email and password:
-#             user_obj = User.objects.filter(email=email).first()
-#             if not user_obj:
-#                 raise serializers.ValidationError("This email is not registered")
-#             if not user_obj.check_password(password):
-#                 raise serializers.ValidationError("Incorrect credentials")
-#         return data
+
+class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(required=True, max_length=255, allow_blank=False, write_only=True)
+    confirm_password = serializers.CharField(required=True, max_length=255, allow_blank=False, write_only=True)
+
+    class Meta:
+        model = User
+        fields =( 
+            'email', 
+            'first_name', 
+            'last_name', 
+            'phone', 
+            'company_name',
+            'password',
+            'confirm_password',
+            )
+
+
+    def create(self, validated_data):
+        user = User(
+            email=validated_data.get('email'),
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
+            phone=validated_data.get('phone', ''),
+            company_name=validated_data.get('company_name', ''),
+        )
+        user.set_password(validated_data.get('password'))
+        user.save()
+        return user
+    
+
+    def validate(self, data):
+        """
+        Check if password match.
+        """
+        if data['password'] != data['confirm_password']:
+            raise serializers.ValidationError("Password does not match!!!")
+        return data
+
+    def validate_phone(self, value):
+        """
+        Validate phone number using regular expression
+        """
+        if value:
+            phone_regex = re.compile(r'^\d{11}$')
+            result = phone_regex.match(value)
+            if not result:
+                raise serializers.ValidationError(f'{value} is not a valid phone number')
+            # print(result.group())
+        return value
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'email', 'phone_number', 'company_name']
