@@ -151,8 +151,24 @@ class ViewCampaign(APIView):
 
 
     def post(self, request, name):
+        data = {}
+        user = request.user
+        token_user = request.auth.user
+        try:
+            request.data['host'] = user
+            serializer = CampaignCreationSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            data['message'] = 'success'
+            data['body'] = 'Campaign Created'
+            return Response(data)
+        except Exception as e:
+            data['message'] = 'Failure'
+            data['body'] = f'error: {e}'
+            return Response(data)
 
-        pass
+
+
 
 class RedirectLink(APIView):
 
