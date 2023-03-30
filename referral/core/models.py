@@ -53,7 +53,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 class Campaign(models.Model):
     host = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=50, unique=True)
-    link = models.URLField(max_length=70)
+    link = models.URLField(max_length=75)
     clicks = models.IntegerField(default=0)
     contestant_number = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
